@@ -39,7 +39,7 @@
 
     // Spacebrew Object
     var sb
-      , app_name = "SleepApp"
+      , app_name = "MobileApp"
       , values = {} ;
 
     /**
@@ -64,26 +64,27 @@
       sb = new Spacebrew.Client();
 
       sb.name(app_name);
-      sb.description("Sliders for sending and displaying SpaceBrew range messages.");
+      sb.description("This spacebrew client sends range, boolean and custom messages to processing app.");
 
       // configure the publication and subscription feeds
       sb.addPublish("sliderX", "range", "5");
       sb.addPublish("sliderY", "range", "5");
-      //sb.addPublish("guest_info", "guest", "1");
       sb.addPublish("guest_info","guest", "guest_color");
-      sb.addSubscribe("remote guest", "guest");
+      sb.addPublish("buttonPress", "boolean", "false");
+      // sb.addSubscribe( "toggleBackground", "boolean" );
 
       // override Spacebrew events - this is how you catch events coming from Spacebrew
-      sb.onCustomMessage = onCustomMessage;
-      sb.onRangeMessage = onRangeMessage;
-      sb.onOpen = onOpen;
-
+      sb.onCustomMessage = onCustomMessage; // for guest_info
+      sb.onRangeMessage = onRangeMessage; // for X Y range
+      sb.onBooleanMessage = onBooleanMessage;
+      sb.onOpen = onOpen; //not sure for what 
       // connect to spacbrew
       sb.connect();
 
       $("#buttonMsg").on("mousedown", onButtonPress);
-    };
-
+      $("#buttonMsg").on("mouseup", onButtonRelease);
+    
+    }
 
     /**
      * Function that is called when Spacebrew connection is established
@@ -96,7 +97,6 @@
       $("#name").html( message );
     }
 
-
     /**
      * setupUI Function that create the event listeners for the sliders. It creates an callback
      *       function that sends a spacebrew message whenever an slide event is received.
@@ -108,7 +108,6 @@
         if (values[event.target.id] != event.target.value) {
           sb.send(event.target.id, "range", event.target.value);
           values[event.target.id] = event.target.value;
-          //sb.send(event.target.id, "guest", event.target.value);
         }
       });
     }
@@ -124,37 +123,26 @@
       $("#"+name).slider('refresh', value);
     };
 
-    // function changeColor(color)
-    // {
-    //   document.getElementById("bottom").style.backgroundColor = color;
-    //   background_color = color;
-    //   //alert(color.innerHTML);
-    // }
-
-    // function onButtonPress (evt){      
-    //       sb.send("guest_info", "guest", "1");
-    // }
-
     function onCustomMessage( name, type, value ){
 
     }
-
-    // function onClick(event){
-    //   sb.send("guest_info", "guest", "1");
-    // }
-
- $(document).ready(function () {
-
-      //以下定義了當 按鈕 "btn_Run", 有人Click的時候便彈出一個Hello ShareChiWai的MessageE.G.
-      $("#btn_Run").click(function(){
-        alert("Hello! ShareChiWai.");
-        console.log("cliked");
-      });
-
-    });
-
-    console.log("backgrond color : " + background_color);
-
+    
+    function onButtonPress (evt){
+            console.log("[onButtonPress] button has been pressed"); 
+          sb.send("buttonPress", "boolean", "true");
+    }
+    function onButtonRelease (evt){
+          console.log("[onButtonRelease] button has been released"); 
+          sb.send("buttonPress", "boolean", "false");
+    }
+    function onBooleanMessage( name, value ){
+      console.log("[onBooleanMessage] boolean message received ", value);
+      if (value == true) {
+             alert("Hello! I am an alert box!!");
+      } else if (value == false) {
+            alert("Goodbye!!");       
+      }
+    }
     </script>
     
 <link rel="stylesheet" href="style.css">
@@ -180,8 +168,9 @@
  
     <div id = "bottom" style = "text-align:center;margin-top:10px;">
         <canvas id="c" width="100" height="100"></canvas>
-        <a class="button" id="buttonMsg" background="red" color="red" width="100px" height="100px" top="200px" left="10px">!!!!Tab Me!!!!</a>
-        <input type="button" id="btn_Run" left="100px" value="Button"/>
+
+        <a class="button" id="buttonMsg">Click Me</a>
+
     </div>
  
 </div>

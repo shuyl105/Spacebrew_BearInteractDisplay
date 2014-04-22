@@ -7,7 +7,7 @@ Movie stage3;
 // Spacebrew
 import spacebrew.*;
 String server = "sandbox.spacebrew.cc";
-String name="wakeUpApp";
+String name="BearApp";
 String desc = "Receiver; wake the bear up";
 Spacebrew sb;
 
@@ -19,7 +19,7 @@ int engaged_count=0;
 // variables 
 int called = 0;
 int count = 0;
-boolean playing;
+boolean playing, drawing;
 boolean stage2Finished, refresh;
 int time;
 int wait2 = 5000;
@@ -37,6 +37,7 @@ void setup() {
   noStroke();
   frameRate(30);
   playing = false;
+  drawing = false;
   stage2Finished = false;
   refresh = false;
   time = millis();
@@ -53,23 +54,22 @@ void setup() {
   //subscribe>>receive
   sb.addSubscribe( "remote_sliderX", "range" );
   sb.addSubscribe( "remote_sliderY", "range" );
-  sb.addSubscribe("info", "guest");
-  //sb.addPublish("");
-  
-
+  sb.addSubscribe("guest_info", "guest");
+  sb.addSubscribe("buttonPress", "boolean");
 
   sb.connect( server, name, desc );
 }
 
 void draw() {
   // println("how many people"+ engaged_count);
-
-/************ X event **************/
+/**
+********** X event ************
+**/
   if (remote_sliderX_val == -10 && !playing || remote_sliderX_val == 10 && !playing) {
     count ++;
   }
   
-  if (refresh) {
+  if (refresh){
     if (called == 0) {
       time = millis();
       //      println("---- pausing time ----");
@@ -91,8 +91,13 @@ void draw() {
     || refresh == true && count >= 100 && count < 150) {//bear stage1
 //    background(255, 0, 0);
     play1();
-    fill(0);
-    //text("sleeping........", 100,100);
+//*** button testing ***//
+    if(drawing == true){
+      fill(255, 65, 255);
+      rect(width/2, height/2, 200, 200);
+      delay(2000);
+      drawing = false;
+    }
   }
   else if (count >= 50 && count <100) {//stage2
     if (called == 0) {
@@ -131,7 +136,9 @@ void draw() {
     }
   }
 //  println(count);
-/************ Y event **************/
+/***
+********* Y event ***********
+***/
   if (remote_sliderY_val == -10 || remote_sliderY_val == 10) {
     fill(colorInfo);
     rect(100, 100, 100, 100);
@@ -156,8 +163,7 @@ void play3() {
 }
 
 void onRangeMessage( String name, int value ) {
-//  println("range");
-//  println("got range message " + name + " : " + value);
+  println("got range message " + name + " : " + value);
   if (name.equals("remote_sliderX")) {
     //do x stuff
     println("rangeX");
@@ -169,7 +175,6 @@ void onRangeMessage( String name, int value ) {
     remote_sliderY_val = value;
   }
 }
-
 
 void onCustomMessage( String name, String type, String value ) {
   if (name.equals("info")) {
@@ -184,7 +189,18 @@ void onCustomMessage( String name, String type, String value ) {
       colorInfo = color(0,0,255);
     }
   }
-//  println("engaging # : " + engaged_count);
+}
+
+void onBooleanMessage(String name, boolean value){
+//  println("got bool message " + name + " : " + value);
+  if (value == true) {
+    // do something
+    println("pressed");
+    drawing = true;
+  } else {
+    println("released");
+    drawing = false;
+  }
 }
 
 void movieEvent(Movie myMovie) {
